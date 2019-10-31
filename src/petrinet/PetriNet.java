@@ -55,6 +55,10 @@ public class PetriNet<T> {
     public String toString() {
     	return state.toString();
     }
+    
+    public Integer getArcs(T key) {
+    	return state.get(key);
+    }
 
 
 }
