@@ -51,6 +51,10 @@ public class PetriNet<T> {
         	wait();
     	}
     }
+    
+    public String toString() {
+    	return state.toString();
+    }
 
 
 }
