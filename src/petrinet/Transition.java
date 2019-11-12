@@ -17,24 +17,39 @@ public class Transition<T> {
 		this.inhibitor = inhibitor;
 		this.output = output;
 	}
+
+    private int get(Map<T, Integer> state, T key) {
+    	return state.getOrDefault(key, 0);
+	}
+    
+	private void put(Map<T, Integer> state, T key, int val) {
+		if(val==0)
+			state.remove(key);
+		else
+			state.put(key, val);
+	}  
     
     public boolean canTransit(final Map<T, Integer> state) {
     	for(Entry<T, Integer> x : input.entrySet())
-    		if(state.get(x.getKey()) < x.getValue())
+    		if(get(state, x.getKey()) < x.getValue())
     			return false;
     	for(T x : inhibitor)
-    		if(state.get(x) != 0)
+    		if(get(state, x) != 0)
     			return false;
     	return true;
     }
     
-    public void transit(Map<T, Integer> state) {
+
+
+	public void transit(Map<T, Integer> state) {
     	for(Entry<T, Integer> x : input.entrySet())
-    		state.put(x.getKey(), state.get(x.getKey()) - x.getValue());
+    		put(state, x.getKey(), get(state, x.getKey()) - x.getValue());
     	for(T x : reset)
-    		state.put(x, 0);
+    		put(state, x, 0);
     	for(Entry<T, Integer> x : output.entrySet())
-    		state.put(x.getKey(), state.get(x.getKey()) + x.getValue());
-    }    
+    		put(state, x.getKey(), get(state, x.getKey()) + x.getValue());
+    }
+
+  
     
 }

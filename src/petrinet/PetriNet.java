@@ -16,6 +16,8 @@ public class PetriNet<T> {
     public PetriNet(Map<T, Integer> initial, boolean fair) {
 		this.state = initial;
 		this.fair = fair;
+		
+		state.values().removeIf(value -> value == 0);
 	}
 
     public Set<Map<T, Integer>> reachable(Collection<Transition<T>> transitions) {
@@ -26,6 +28,7 @@ public class PetriNet<T> {
     	
     	while(!toCheck.empty()) {
     		Map<T, Integer> newState = toCheck.pop();
+//    		System.out.println(newState);
     		if(res.add(newState)) {
 	    		for(Transition<T> t : transitions)
 	    			if(t.canTransit(newState)) {
