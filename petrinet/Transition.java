@@ -9,7 +9,6 @@ public class Transition<T> {
 	private final Collection<T> reset;
 	private final Collection<T> inhibitor;
 	private final Map<T, Integer> output;
-	
 
     public Transition(Map<T, Integer> input, Collection<T> reset, Collection<T> inhibitor, Map<T, Integer> output) {
 		this.input = input;
@@ -29,7 +28,7 @@ public class Transition<T> {
 			state.put(key, val);
 	}  
     
-    public boolean canTransit(final Map<T, Integer> state) {
+    boolean canTransit(final Map<T, Integer> state) {
     	for(Entry<T, Integer> x : input.entrySet())
     		if(get(state, x.getKey()) < x.getValue())
     			return false;
@@ -38,10 +37,8 @@ public class Transition<T> {
     			return false;
     	return true;
     }
-    
 
-
-	public void transit(Map<T, Integer> state) {
+	void transit(Map<T, Integer> state) {
     	for(Entry<T, Integer> x : input.entrySet())
     		put(state, x.getKey(), get(state, x.getKey()) - x.getValue());
     	for(T x : reset)
@@ -49,7 +46,5 @@ public class Transition<T> {
     	for(Entry<T, Integer> x : output.entrySet())
     		put(state, x.getKey(), get(state, x.getKey()) + x.getValue());
     }
-
-  
     
 }

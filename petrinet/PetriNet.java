@@ -1,16 +1,13 @@
 package petrinet;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class PetriNet<T> {
 
 	private Map<T, Integer> state;
-	boolean fair;
+	private boolean fair;
+	private Queue<Thread> queue = new LinkedList<>();
+
 	
 
     public PetriNet(Map<T, Integer> initial, boolean fair) {
@@ -21,14 +18,13 @@ public class PetriNet<T> {
 	}
 
     public Set<Map<T, Integer>> reachable(Collection<Transition<T>> transitions) {
-    	Set<Map<T, Integer>> res = new HashSet<Map<T, Integer>>();
-    	Stack<Map<T, Integer>> toCheck = new Stack<Map<T, Integer>>();
+    	Set<Map<T, Integer>> res = new HashSet<>();
+    	Stack<Map<T, Integer>> toCheck = new Stack<>();
     	
     	toCheck.add(state);
     	
     	while(!toCheck.empty()) {
     		Map<T, Integer> newState = toCheck.pop();
-//    		System.out.println(newState);
     		if(res.add(newState)) {
 	    		for(Transition<T> t : transitions)
 	    			if(t.canTransit(newState)) {
@@ -42,16 +38,35 @@ public class PetriNet<T> {
     	return res;
     }
 
+    private synchronized Transition<T> tryFire(Collection<Transition<T>> transitions) {
+		for(Transition<T> t : transitions) {
+			if(t.canTransit(state)) {
+				t.transit(state);
+				return t;
+			}
+		}
+		return null;
+	}
+
     public synchronized Transition<T> fire(Collection<Transition<T>> transitions) throws InterruptedException {
     	while(true) {
-        	for(Transition<T> t : transitions) {
-        		if(t.canTransit(state)) {
-        			t.transit(state);
-        			notifyAll();
-        			return t;
-        		}
-        	}
-        	wait();
+			Transition<T> res = tryFire(transitions);
+			if(res != null) {
+				notifyAll();
+				return res;
+			}
+			if(fair) {
+				Thread thread = Thread.currentThread();
+				queue.add(thread);
+				wait();
+				while(queue.peek() != thread) {
+					wait();
+				}
+				queue.poll();
+			}
+			else {
+				wait();
+			}
     	}
     }
     
