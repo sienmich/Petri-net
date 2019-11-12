@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import petrinet.*;
 
@@ -84,17 +87,26 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-
 		init();
-		List<Thread> threads = new ArrayList<Thread>();
 		
+		Set<Map<Integer, Integer>> reachable = net.reachable(Stream.concat(enters.stream(), exits.stream())
+                .collect(Collectors.toList()));
+		
+		System.out.println("There are " + reachable.size() + " reachable states from the initial state.");
+		for (Map<Integer, Integer> state : reachable) {
+			assert (state.get(1) + state.get(4) + state.get(7) <= 1) : "Two threads could end up in critical section.";
+		}
+		System.out.println("All states are safe (in terms of criticall section).");
+		
+		
+		List<Thread> threads = new ArrayList<Thread>();
 		for(int i=0; i<3; i++)
 			threads.add(new Thread(new NetThread(Arrays.asList(enters.get(i), exits.get(i))), String.valueOf((char)('A' + i))));
 		for(int i=0; i<3; i++)
 			threads.get(i).start();
 
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(1);
 		} catch (InterruptedException e) {
 			Thread t = Thread.currentThread();
 			t.interrupt();
