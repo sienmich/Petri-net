@@ -10,15 +10,19 @@ import java.util.Scanner;
 import petrinet.*;
 
 public class Main {
-	private enum States {
+	/// Number of threads running
+	private static final int THREADS = 4;
+	/// Enum of possible places in PetriNet
+	static private enum Places {
 		A, A2, B, RES, FIRST_PHASE, SECOND_PHASE 
-	}		
-	private static PetriNet<States> net;
-	private static List<Transition<States>> transitions;
-	private static Transition<States> lastTransition;
-	
+	}
+	private static PetriNet<Places> net;
+	/// List of possible transitions
+	private static List<Transition<Places>> transitions;
+	/// The last transitions
+	private static Transition<Places> lastTransition;
 
-
+	/// Thread that fires all possible transitions and counts them
 	private static class NetThread implements Runnable {
 		private int counter = 0;
 		
@@ -27,60 +31,56 @@ public class Main {
 			Thread t = Thread.currentThread();
 			try {
 				while(!t.isInterrupted()) {
-					Transition<States> res = net.fire(transitions);
+					net.fire(transitions);
 					counter++;
-//					System.out.println(net);
 				}
 				throw new InterruptedException();
 			} catch (InterruptedException e) {
 				t.interrupt();
-				System.err.println("Thread " + t.getName() + " fired " + counter + " times.");
-//				System.err.println(t.getName() + " interupted");
+				System.out.println("Thread " + t.getName() + " fired " + counter + " times.");
 			}
 		}
 
 	}
 
+	/// Initializing function, that creates the net, transitions and lastTransition
 	private static void init(int a, int b) {
-		Map<States, Integer> initial = new HashMap<States, Integer>();
-		initial.put(States.A, a);
-		initial.put(States.A2, 0);
-		initial.put(States.B, b);
-		initial.put(States.RES, 0);
-		initial.put(States.FIRST_PHASE, 1);
-		initial.put(States.SECOND_PHASE, 0);
-		net = new PetriNet<States>(initial, false);
+		Map<Places, Integer> initial = new HashMap<Places, Integer>();
+		initial.put(Places.A, a);
+		initial.put(Places.B, b);
+		initial.put(Places.FIRST_PHASE, 1);
+		net = new PetriNet<Places>(initial, false);
 
-		transitions = new ArrayList<Transition<States>>();
+		transitions = new ArrayList<Transition<Places>>();
 
-	    transitions.add(new Transition<States>(
-					Map.of(States.A, 1),
+	    transitions.add(new Transition<Places>(
+					Map.of(Places.A, 1),
 					Arrays.asList(),
-					Arrays.asList(States.SECOND_PHASE),
-					Map.of(States.A2, 1)));
+					Arrays.asList(Places.SECOND_PHASE),
+					Map.of(Places.A2, 1)));
 	    
-	    transitions.add(new Transition<States>(
-					Map.of(States.A2, 1),
+	    transitions.add(new Transition<Places>(
+					Map.of(Places.A2, 1),
 					Arrays.asList(),
-					Arrays.asList(States.FIRST_PHASE),
-					Map.of(States.A, 1, States.RES, 1)));
+					Arrays.asList(Places.FIRST_PHASE),
+					Map.of(Places.A, 1, Places.RES, 1)));
 
-	    transitions.add(new Transition<States>(
-					Map.of(States.B, 1),
-					Arrays.asList(States.FIRST_PHASE),
-					Arrays.asList(States.SECOND_PHASE, States.A),
-					Map.of(States.SECOND_PHASE, 1)));
+	    transitions.add(new Transition<Places>(
+					Map.of(Places.B, 1),
+					Arrays.asList(Places.FIRST_PHASE),
+					Arrays.asList(Places.SECOND_PHASE, Places.A),
+					Map.of(Places.SECOND_PHASE, 1)));
 
-	    transitions.add(new Transition<States>(
+	    transitions.add(new Transition<Places>(
 					Map.of(),
-					Arrays.asList(States.SECOND_PHASE),
-					Arrays.asList(States.FIRST_PHASE, States.A2),
-					Map.of(States.FIRST_PHASE, 1)));
+					Arrays.asList(Places.SECOND_PHASE),
+					Arrays.asList(Places.FIRST_PHASE, Places.A2),
+					Map.of(Places.FIRST_PHASE, 1)));
 	    
-	    lastTransition = new Transition<States>(
+	    lastTransition = new Transition<Places>(
 					Map.of(),
 					Arrays.asList(),
-					Arrays.asList(States.SECOND_PHASE, States.A, States.B),
+					Arrays.asList(Places.SECOND_PHASE, Places.A, Places.B),
 					Map.of());
 	    
 	}
@@ -91,11 +91,10 @@ public class Main {
 		in.close();
 			
 		List<Thread> threads = new ArrayList<Thread>();
-		final int numberOfThreads = 10;
 		
-		for(int i = 0; i < numberOfThreads; i++)
+		for(int i = 0; i < THREADS; i++)
 			threads.add(new Thread(new NetThread(), String.valueOf((char)('A' + i))));
-		for(int i = 0; i < numberOfThreads; i++)
+		for(int i = 0; i < THREADS; i++)
 			threads.get(i).start();
 		
 		try {
@@ -106,10 +105,9 @@ public class Main {
 			System.err.println(t.getName() + " interupted");
 		}
 
-		System.out.println("Result: ");
-		System.out.println(net.getArcs(States.RES));
+		System.out.println("Result: " + net.getArcs(Places.RES));
 
-		for(int i = 0; i < numberOfThreads; i++)
+		for(int i = 0; i < THREADS; i++)
 			threads.get(i).interrupt();
 	}
 
