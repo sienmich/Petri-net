@@ -27,7 +27,7 @@ public class Main {
 	private static class NetThread implements Runnable {
 		Collection<Transition<Integer>> transitions;
 
-		public NetThread(Collection<Transition<Integer>> transitions) {
+		private NetThread(Collection<Transition<Integer>> transitions) {
 			this.transitions = transitions;
 		}
 

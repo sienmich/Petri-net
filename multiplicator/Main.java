@@ -40,7 +40,6 @@ public class Main {
 				System.out.println("Thread " + t.getName() + " fired " + counter + " times.");
 			}
 		}
-
 	}
 
 	/// Initializing function, that creates the net, transitions and lastTransition
