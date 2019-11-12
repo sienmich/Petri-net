@@ -8,15 +8,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import petrinet.*;
 
 public class Main {
-		
+	/// Number of threads running
+	private static final int THREADS = 3;
+	/// Number of places in PetriNet
+	private static final int PLACES = 3 * THREADS;
+	
 	private static PetriNet<Integer> net;
+	/// Transitions which are entering/exiting critical section
 	private static List<Transition<Integer>> enters, exits;
 
+	/// Thread that enters and exits critical section with net.fire(), in witch it prints "A.A."
 	private static class NetThread implements Runnable {
 		Collection<Transition<Integer>> transitions;
 
@@ -27,31 +34,28 @@ public class Main {
 		@Override
 		public void run() {
 			Thread t = Thread.currentThread();
+			
 			try {
 				while(!t.isInterrupted()) {
-					Transition<Integer> res = net.fire(transitions);
-					if(enters.contains(res)) {
-						
-						System.out.print(Thread.currentThread().getName() + ".");
-						System.out.print(Thread.currentThread().getName() + ".");
-//						System.out.println();
-//						System.out.println(net);
-//						System.out.println();
-						
+					if(enters.contains(net.fire(transitions))) { // Entered critical section
+						System.out.print(t.getName() + ".");
+						System.out.print(t.getName() + ".");
 					}
 				}
 				throw new InterruptedException();
 			} catch (InterruptedException e) {
 				t.interrupt();
-				System.err.println(t.getName() + " interupted");
 			}
 		}
 
 	}
 
+	/// Initializing function, that creates the net and possible transitions
 	private static void init() {
-		/* Id
-		 * 	Current State : READY, CRITICAL_SECTION, WAS_LAST
+		/* Table of net's place id number and corresponding meaning
+		 * Example: 1 - process A is in critical section
+		 * 
+		 * Current State : READY, CRITICAL_SECTION, WAS_LAST
 		 * 
 		 * Process name:
 		 * A				0			1				2
@@ -60,25 +64,27 @@ public class Main {
 		 * 
 		 */
 		Map<Integer, Integer> initial = new HashMap<Integer, Integer>();
-		for(int i = 0; i < 9; i++)
-			initial.put(i, i % 3 == 0 ? 1 : 0);
+		for(int i = 0; i < PLACES; i++)
+			initial.put(i, (i % 3 == 0 || i == 2) ? 1 : 0);	// i == 2 <-> at the beginning lets assume that A was last 
+		
 		net = new PetriNet<Integer>(initial, false);
 		enters = new ArrayList<Transition<Integer>>();
 		exits = new ArrayList<Transition<Integer>>();
 		
-		for(int j = 0; j < 9; j+=3) {
-		    enters.add(new Transition<Integer>(
+		for(int j = 0; j < PLACES; j+=3) {
+			enters.add(new Transition<Integer>(
 					Map.of(j, 1),
 					Arrays.asList(),
-					Arrays.asList((j + 4) % 9, (j + 7) % 9, j + 2),
+					IntStream.concat(
+							IntStream.iterate((j+4) % PLACES, i -> (i + 3) % PLACES).limit(THREADS),
+							IntStream.of(j + 2)
+							).boxed().collect(Collectors.toList()),
 					Map.of(j + 1, 1)
 					));
-		}
-		
-		for(int j = 0; j < 9; j+=3) {
 			exits.add(new Transition<Integer>(
 					Map.of(j + 1, 1),
-					Arrays.asList((j + 5) % 9, (j + 8) % 9),
+					IntStream.iterate((j+5) % PLACES, i -> (i + 3) % PLACES).limit(THREADS - 1)
+							.boxed().collect(Collectors.toList()),
 					Arrays.asList(),
 					Map.of(j, 1, j + 2, 1)
 					));
@@ -86,35 +92,55 @@ public class Main {
 
 	}
 
-	public static void main(String[] args) {
-		init();
-		
+	/// Calculates all reachable net's states and checks if they are safe (in terms of critical section)
+	private static void checkReachable() {
 		Set<Map<Integer, Integer>> reachable = net.reachable(Stream.concat(enters.stream(), exits.stream())
                 .collect(Collectors.toList()));
 		
-		System.out.println("There are " + reachable.size() + " reachable states from the initial state.");
+		System.out.println("There are " + reachable.size() + " reachable states.");
 		for (Map<Integer, Integer> state : reachable) {
-			assert (state.get(1) + state.get(4) + state.get(7) <= 1) : "Two threads could end up in critical section.";
+			int inCriticalSection = 0;
+			
+			for(int i = 0; i < THREADS; i++)
+				inCriticalSection += state.getOrDefault(3 * i + 1, 0);
+			
+			if(inCriticalSection > 1) {
+				System.out.println("ERROR: Two threads could end up in critical section.");
+		        System.exit(2);
+			}
 		}
-		System.out.println("All states are safe (in terms of criticall section).");
-		
+		System.out.println("All states are safe (in terms of critical section).");
+	}
+	
+	/// Runs NetThreads for 30s 
+	private static void runThreads() {
+		System.out.println("Running:");
 		
 		List<Thread> threads = new ArrayList<Thread>();
-		for(int i=0; i<3; i++)
-			threads.add(new Thread(new NetThread(Arrays.asList(enters.get(i), exits.get(i))), String.valueOf((char)('A' + i))));
-		for(int i=0; i<3; i++)
+		for(int i=0; i < THREADS; i++)
+			threads.add(new Thread(new NetThread(Arrays.asList(enters.get(i), exits.get(i))),
+									String.valueOf((char)('A' + i))));
+		for(int i=0; i < THREADS; i++)
 			threads.get(i).start();
 
 		try {
-			Thread.sleep(1);
+			Thread.sleep(30 * 1000);
 		} catch (InterruptedException e) {
 			Thread t = Thread.currentThread();
 			t.interrupt();
 			System.err.println(t.getName() + " interupted");
 		}
 
-		for(int i=0; i<3; i++)
+		for(int i=0; i < THREADS; i++)
 			threads.get(i).interrupt();
+		
 	}
-
+	
+	public static void main(String[] args) {
+		init();
+		
+		checkReachable();
+		
+		runThreads();
+	}
 }
