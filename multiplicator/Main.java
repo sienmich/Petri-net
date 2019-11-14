@@ -14,7 +14,7 @@ public class Main {
 	private static final int THREADS = 4;
 	
 	/// Enum of possible places in PetriNet
-	static private enum Places {
+	private enum Places {
 		A, A2, B, RES, FIRST_PHASE, SECOND_PHASE
 	}
 	

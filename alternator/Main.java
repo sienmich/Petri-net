@@ -63,7 +63,7 @@ public class Main {
 		 * C				6			7				8
 		 *
 		 */
-		Map<Integer, Integer> initial = new HashMap<Integer, Integer>();
+		Map<Integer, Integer> initial = new HashMap<>();
 		for (int i = 0; i < PLACES; i++)
 			initial.put(i, (i % 3 == 0 || i == 2) ? 1 : 0);    // i == 2 <-> at the beginning lets assume that A was last
 		
@@ -72,7 +72,7 @@ public class Main {
 		exits = new ArrayList<Transition<Integer>>();
 		
 		for (int j = 0; j < PLACES; j += 3) {
-			enters.add(new Transition<Integer>(
+			enters.add(new Transition<>(
 					Map.of(j, 1),
 					Arrays.asList(),
 					IntStream.concat(
@@ -81,7 +81,7 @@ public class Main {
 					).boxed().collect(Collectors.toList()),
 					Map.of(j + 1, 1)
 			));
-			exits.add(new Transition<Integer>(
+			exits.add(new Transition<>(
 					Map.of(j + 1, 1),
 					IntStream.iterate((j + 5) % PLACES, i -> (i + 3) % PLACES).limit(THREADS - 1)
 							.boxed().collect(Collectors.toList()),
@@ -116,7 +116,7 @@ public class Main {
 	private static void runThreads() {
 		System.out.println("Running:");
 		
-		List<Thread> threads = new ArrayList<Thread>();
+		List<Thread> threads = new ArrayList<>();
 		for (int i = 0; i < THREADS; i++)
 			threads.add(new Thread(new NetThread(Arrays.asList(enters.get(i), exits.get(i))),
 					String.valueOf((char) ('A' + i))));
