@@ -39,7 +39,7 @@ public class Main {
 				throw new InterruptedException();
 			} catch (InterruptedException e) {
 				t.interrupt();
-				System.out.println("Thread " + t.getName() + " fired " + counter + " times.");
+				System.out.println("Thread " + t.getName() + " fired " + counter + " times");
 			}
 		}
 	}
@@ -54,35 +54,35 @@ public class Main {
 		
 		transitions = new ArrayList<Transition<Places>>();
 		
-		transitions.add(new Transition<Places>(
-				Map.of(Places.A, 1),
-				Arrays.asList(),
-				Arrays.asList(Places.SECOND_PHASE),
-				Map.of(Places.A2, 1)));
+		transitions.add(new Transition<>(
+                Map.of(Places.A, 1),
+                Arrays.asList(),
+                Arrays.asList(Places.SECOND_PHASE),
+                Map.of(Places.A2, 1)));
 		
-		transitions.add(new Transition<Places>(
-				Map.of(Places.A2, 1),
-				Arrays.asList(),
-				Arrays.asList(Places.FIRST_PHASE),
-				Map.of(Places.A, 1, Places.RES, 1)));
+		transitions.add(new Transition<>(
+                Map.of(Places.A2, 1),
+                Arrays.asList(),
+                Arrays.asList(Places.FIRST_PHASE),
+                Map.of(Places.A, 1, Places.RES, 1)));
 		
-		transitions.add(new Transition<Places>(
-				Map.of(Places.B, 1),
-				Arrays.asList(Places.FIRST_PHASE),
-				Arrays.asList(Places.SECOND_PHASE, Places.A),
-				Map.of(Places.SECOND_PHASE, 1)));
+		transitions.add(new Transition<>(
+                Map.of(Places.B, 1),
+                Arrays.asList(Places.FIRST_PHASE),
+                Arrays.asList(Places.SECOND_PHASE, Places.A),
+                Map.of(Places.SECOND_PHASE, 1)));
 		
-		transitions.add(new Transition<Places>(
-				Map.of(),
-				Arrays.asList(Places.SECOND_PHASE),
-				Arrays.asList(Places.FIRST_PHASE, Places.A2),
-				Map.of(Places.FIRST_PHASE, 1)));
+		transitions.add(new Transition<>(
+                Map.of(),
+                Arrays.asList(Places.SECOND_PHASE),
+                Arrays.asList(Places.FIRST_PHASE, Places.A2),
+                Map.of(Places.FIRST_PHASE, 1)));
 		
-		lastTransition = new Transition<Places>(
-				Map.of(),
-				Arrays.asList(),
-				Arrays.asList(Places.SECOND_PHASE, Places.A, Places.B),
-				Map.of());
+		lastTransition = new Transition<>(
+                Map.of(),
+                Arrays.asList(),
+                Arrays.asList(Places.SECOND_PHASE, Places.A, Places.B),
+                Map.of());
 		
 	}
 	
@@ -103,7 +103,7 @@ public class Main {
 		} catch (InterruptedException e) {
 			Thread t = Thread.currentThread();
 			t.interrupt();
-			System.err.println(t.getName() + " interupted");
+			System.err.println(t.getName() + " interrupted");
 		}
 		
 		System.out.println("Result: " + net.getArcs(Places.RES));
