@@ -67,9 +67,9 @@ public class Main {
 		for (int i = 0; i < PLACES; i++)
 			initial.put(i, (i % 3 == 0 || i == 2) ? 1 : 0);    // i == 2 <-> at the beginning lets assume that A was last
 		
-		net = new PetriNet<Integer>(initial, true);
-		enters = new ArrayList<Transition<Integer>>();
-		exits = new ArrayList<Transition<Integer>>();
+		net = new PetriNet<>(initial, true);
+		enters = new ArrayList<>();
+		exits = new ArrayList<>();
 		
 		for (int j = 0; j < PLACES; j += 3) {
 			enters.add(new Transition<>(
@@ -128,7 +128,7 @@ public class Main {
 		} catch (InterruptedException e) {
 			Thread t = Thread.currentThread();
 			t.interrupt();
-			System.err.println(t.getName() + " interupted");
+			System.err.println(t.getName() + " interrupted");
 		}
 		
 		for (int i = 0; i < THREADS; i++)
