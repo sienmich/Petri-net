@@ -8,15 +8,13 @@ public class PetriNet<T> {
 	/// Current state of the net
 	private Map<T, Integer> state;
 	
-	/// If is fair then chosen to awake (from the threads stopped by fire method) is the one, that waits the longest.
-	private boolean fair;
 	private Semaphore mutex;
 	/// Queue of threads to awake
 	private List<Semaphore> waiting = new LinkedList<>();
 	
+	/// If is fair then chosen to awake (from the threads stopped by fire method) is the one, that waits the longest.
 	public PetriNet(Map<T, Integer> initial, boolean fair) {
 		this.state = initial;
-		this.fair = fair;
 		
 		mutex = new Semaphore(1, fair);
 		waiting.add(new Semaphore(1));
@@ -76,8 +74,19 @@ public class PetriNet<T> {
 		
 		while (true) {
 			mutex.release();
-			myTurn.acquire();
-			mutex.acquire();
+			try {
+				myTurn.acquire();
+				mutex.acquire();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				mutex.acquire();
+				
+				waiting.remove(myTurn);
+				if(myTurn.availablePermits() > 0)
+					waiting.get(1 + waiting.indexOf(myTurn)).release();
+				mutex.release();
+				throw e;
+			}
 			
 			Transition<T> res = tryFire(transitions);
 			if (res != null) {
