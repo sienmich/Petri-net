@@ -1,13 +1,14 @@
 package test;
 
 import petrinet.*;
+
 import java.util.*;
 import java.util.concurrent.*;
 
 public class Test_interrupt {
 
     private static Collection<Transition<Integer>> create_transition(int origin,
-            int destination) {
+                                                                     int destination) {
         HashSet<Transition<Integer>> result = new HashSet<>();
         Map<Integer, Integer> input = new HashMap<>();
         Map<Integer, Integer> output = new HashMap<>();
@@ -22,6 +23,7 @@ public class Test_interrupt {
         private Collection<Transition<Integer>> task;
         private PetriNet<Integer> net;
         private String nazwa;
+
         Worker(int origin, int destination, PetriNet<Integer> net, String nazwa) {
             task = create_transition(origin, destination);
             this.net = net;
