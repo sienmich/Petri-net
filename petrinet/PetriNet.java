@@ -36,7 +36,9 @@ public class PetriNet<T> {
 		try {
 			mutex.acquire();
 		} catch (InterruptedException e) {
+			System.err.println("reachable interrupted");
 			e.printStackTrace();
+			return null;
 		}
 		
 		toCheck.add(state);
@@ -79,19 +81,20 @@ public class PetriNet<T> {
 			mutex.release();
 
 			while (true) {
+				boolean acquired = false;
 				try {
 					myTurn.acquire();
-				} catch (InterruptedException e) {
+					acquired = true;
 					mutex.acquire();
+				} catch (InterruptedException e) {
+					mutex.acquireUninterruptibly();
 
 					waiting.remove(myTurn);
-					if(myTurn.availablePermits() > 0)
+					if(acquired || myTurn.availablePermits() > 0)
 						waiting.get(1 + waiting.indexOf(myTurn)).release();
 					mutex.release();
 					throw e;
 				}
-
-				mutex.acquire();
 
 				Transition<T> res = tryFire(transitions);
 				if (res != null) {
@@ -104,7 +107,6 @@ public class PetriNet<T> {
 
 				mutex.release();
 			}
-
 		} else {
 			while (true) {
 				mutex.acquire();
