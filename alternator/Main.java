@@ -67,7 +67,7 @@ public class Main {
 		for (int i = 0; i < PLACES; i++)
 			initial.put(i, (i % 3 == 0 || i == 2) ? 1 : 0);    // i == 2 <-> at the beginning lets assume that A was last
 		
-		net = new PetriNet<>(initial, true);
+		net = new PetriNet<>(initial, false);
 		enters = new ArrayList<>();
 		exits = new ArrayList<>();
 		

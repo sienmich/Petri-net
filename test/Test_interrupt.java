@@ -22,7 +22,7 @@ public class Test_interrupt {
         private Collection<Transition<Integer>> task;
         private PetriNet<Integer> net;
         private String nazwa;
-        public Worker(int origin, int destination, PetriNet<Integer> net, String nazwa) {
+        Worker(int origin, int destination, PetriNet<Integer> net, String nazwa) {
             task = create_transition(origin, destination);
             this.net = net;
             this.nazwa = nazwa;

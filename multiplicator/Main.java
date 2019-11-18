@@ -50,7 +50,7 @@ public class Main {
 		initial.put(Places.A, a);
 		initial.put(Places.B, b);
 		initial.put(Places.FIRST_PHASE, 1);
-		net = new PetriNet<Places>(initial, false);
+		net = new PetriNet<Places>(initial, true);
 		
 		transitions = new ArrayList<Transition<Places>>();
 		

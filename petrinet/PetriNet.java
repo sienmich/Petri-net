@@ -7,16 +7,21 @@ public class PetriNet<T> {
 	
 	/// Current state of the net
 	private Map<T, Integer> state;
-	
-	private Semaphore mutex;
-	/// Queue of threads to awake
-	private List<Semaphore> waiting = new LinkedList<>();
-	
+
 	/// If is fair then chosen to awake (from the threads stopped by fire method) is the one, that waits the longest.
+	private boolean fair;
+	/// Mutex of access to fire function
+	private Semaphore mutex;
+
+	/// Queue of threads to awake (used if fair)
+	private List<Semaphore> waiting = new LinkedList<>();
+
+
 	public PetriNet(Map<T, Integer> initial, boolean fair) {
 		this.state = initial;
+		this.fair = fair;
 		
-		mutex = new Semaphore(1, fair);
+		mutex = new Semaphore(1, true);
 		waiting.add(new Semaphore(1));
 		
 		state.values().removeIf(value -> value == 0);
@@ -67,38 +72,52 @@ public class PetriNet<T> {
 	/// If there is one possible, fires it and awakes other threads.
 	/// If the net is fair then chosen to awake (from the threads stopped) is the one, that waits the longest.
 	public Transition<T> fire(Collection<Transition<T>> transitions) throws InterruptedException {
-		mutex.acquire();
-
-		Semaphore myTurn = waiting.get(waiting.size() - 1);
-		waiting.add(new Semaphore(0));
-		
-		while (true) {
+		if (fair) {
+			mutex.acquire();
+			Semaphore myTurn = waiting.get(waiting.size() - 1);
+			waiting.add(new Semaphore(0));
 			mutex.release();
-			try {
-				myTurn.acquire();
+
+			while (true) {
+				try {
+					myTurn.acquire();
+				} catch (InterruptedException e) {
+					mutex.acquire();
+
+					waiting.remove(myTurn);
+					if(myTurn.availablePermits() > 0)
+						waiting.get(1 + waiting.indexOf(myTurn)).release();
+					mutex.release();
+					throw e;
+				}
+
 				mutex.acquire();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+
+				Transition<T> res = tryFire(transitions);
+				if (res != null) {
+					waiting.remove(myTurn);
+					waiting.get(0).release();
+					mutex.release();
+					return res;
+				}
+				waiting.get(1 + waiting.indexOf(myTurn)).release();
+
+				mutex.release();
+			}
+
+		} else {
+			while (true) {
 				mutex.acquire();
-				
-				waiting.remove(myTurn);
-				if(myTurn.availablePermits() > 0)
-					waiting.get(1 + waiting.indexOf(myTurn)).release();
+				Transition<T> res = tryFire(transitions);
 				mutex.release();
-				throw e;
+				if (res != null) {
+					return res;
+				}
 			}
-			
-			Transition<T> res = tryFire(transitions);
-			if (res != null) {
-				waiting.remove(myTurn);
-				waiting.get(0).release();
-				mutex.release();
-				return res;
-			}
-			
-			waiting.get(1 + waiting.indexOf(myTurn)).release();
-			
+
 		}
+
+
 	}
 	
 	public String toString() {
