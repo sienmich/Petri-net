@@ -46,13 +46,13 @@ public class Main {
 	
 	/// Initializing function, that creates the net, transitions and lastTransition
 	private static void init(int a, int b) {
-		Map<Places, Integer> initial = new HashMap<Places, Integer>();
+		Map<Places, Integer> initial = new HashMap<>();
 		initial.put(Places.A, a);
 		initial.put(Places.B, b);
 		initial.put(Places.FIRST_PHASE, 1);
-		net = new PetriNet<Places>(initial, true);
+		net = new PetriNet<>(initial, false);
 		
-		transitions = new ArrayList<Transition<Places>>();
+		transitions = new ArrayList<>();
 		
 		transitions.add(new Transition<>(
                 Map.of(Places.A, 1),
@@ -91,7 +91,7 @@ public class Main {
 		init(in.nextInt(), in.nextInt());
 		in.close();
 		
-		List<Thread> threads = new ArrayList<Thread>();
+		List<Thread> threads = new ArrayList<>();
 		
 		for (int i = 0; i < THREADS; i++)
 			threads.add(new Thread(new NetThread(), String.valueOf((char) ('A' + i))));

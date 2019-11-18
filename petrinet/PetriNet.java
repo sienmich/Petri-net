@@ -76,7 +76,7 @@ public class PetriNet<T> {
 	public Transition<T> fire(Collection<Transition<T>> transitions) throws InterruptedException {
 		if (fair) {
 			mutex.acquire();
-			Semaphore myTurn = waiting.get(waiting.size() - 1);
+			Semaphore myTurn = waiting.get(waiting.size() - 1); // There is always one more semaphore to simplify
 			waiting.add(new Semaphore(0));
 			mutex.release();
 
@@ -86,7 +86,7 @@ public class PetriNet<T> {
 					myTurn.acquire();
 					acquired = true;
 					mutex.acquire();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException e) {  // If interrupted, i have to remove myself from queue
 					mutex.acquireUninterruptibly();
 
 					waiting.remove(myTurn);
@@ -127,6 +127,6 @@ public class PetriNet<T> {
 	}
 	
 	public Integer getArcs(T key) {
-		return state.get(key);
+		return state.getOrDefault(key, 0);
 	}
 }
